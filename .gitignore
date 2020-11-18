@@ -3,9 +3,16 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+.vscode
+*.pth
 
 # C extensions
 *.so
+*.png
+*.jpg
+*.json
+*.txt
+scripts/yoloact/data/coco
 
 # Distribution / packaging
 .Python
