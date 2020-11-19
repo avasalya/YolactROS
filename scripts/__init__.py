@@ -1,9 +1,9 @@
-import roslib
-roslib.load_manifest('yolact_ros')
+# import roslib
+# roslib.load_manifest('yolact_ros')
 
 import os
 import sys
-sys.path.append(os.path.join(os.path.dirname(__file__), "yolact"))
+sys.path.append(os.path.join(os.path.dirname(__file__), "yolact")) #to add yolact directory
 
 import cv2
 import time
@@ -16,8 +16,8 @@ import pycocotools
 import numpy as np
 import matplotlib.pyplot as plt
 
-from PIL import Image
-from queue import Queue
+# from PIL import Image
+# from queue import Queue
 from colorama import Fore, Style
 from collections import defaultdict, OrderedDict
 

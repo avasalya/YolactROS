@@ -42,7 +42,7 @@ class YolactROS:
 
             h, w, _ = frame.shape
             classes, scores, boxes, masks = self.postprocess_results(preds, w, h)
-            print(f'{Fore.RED}Total onigiri(s) found{Style.RESET_ALL}', len(boxes))
+            print(len(boxes), f'{Fore.RED}onigiri(s) found{Style.RESET_ALL}')
 
             image = self.prep_display(classes, scores, boxes, masks, frame, fps_str=str(self.fps))
             cv2.imshow('yolact boxes', cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
@@ -156,7 +156,7 @@ class YolactROS:
                 x1, y1, x2, y2 = boxes[j, :]
                 color = get_color(j)
                 score = scores[j]
-                print(f'{Fore.GREEN}at confidence{Style.RESET_ALL}', score)
+                print(f'{Fore.GREEN}at confidence{Style.RESET_ALL}', str(round(score*100)) + '%')
 
                 if self.display_bboxes:
                     cv2.rectangle(img_numpy, (x1, y1), (x2, y2), color, 1)
