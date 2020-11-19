@@ -10,8 +10,8 @@ class YolactROS:
         self.net = net
 
         self.fps = 0
-        self.top_k = 5
-        self.score_threshold = 0.0
+        self.top_k = 100
+        self.score_threshold = .7
 
         self.crop_masks = True
         self.display_masks = True
@@ -34,7 +34,6 @@ class YolactROS:
         except rospy.ROSException:
             print(f'{Fore.RED}ROS Interrupted{Style.RESET_ALL}')
 
-
     def evalimage(self):
         with torch.no_grad():
             frame = torch.from_numpy(self.img).cuda().float()
@@ -55,6 +54,25 @@ class YolactROS:
                     sys.exit(1)
                 except SystemExit:
                     os._exit(0)
+
+    def postprocess_results(self, dets_out, w, h):
+            with timer.env('Postprocess'):
+                save = cfg.rescore_bbox
+                cfg.rescore_bbox = True
+                t = postprocess(dets_out, w, h, visualize_lincomb = False,
+                                                crop_masks        = self.crop_masks,
+                                                score_threshold   = self.score_threshold)
+                cfg.rescore_bbox = save
+
+            with timer.env('Copy'):
+                idx = t[1].argsort(0, descending=True)[:self.top_k]
+
+                if cfg.eval_mask_branch:
+                    # Masks are drawn on the GPU, so don't copy
+                    masks = t[3][idx]
+                classes, scores, boxes = [x[idx].cpu().numpy() for x in t[:3]]
+
+            return classes, scores, boxes, masks
 
     def prep_display(self, classes, scores, boxes, masks, img, class_color=False, mask_alpha=0.45, fps_str=''):
 
@@ -162,25 +180,6 @@ class YolactROS:
         return img_numpy
 
 
-    def postprocess_results(self, dets_out, w, h):
-        with timer.env('Postprocess'):
-            save = cfg.rescore_bbox
-            cfg.rescore_bbox = True
-            t = postprocess(dets_out, w, h, visualize_lincomb = False,
-                                            crop_masks        = self.crop_masks,
-                                            score_threshold   = self.score_threshold)
-            cfg.rescore_bbox = save
-
-        with timer.env('Copy'):
-            idx = t[1].argsort(0, descending=True)[:self.top_k]
-
-            if cfg.eval_mask_branch:
-                # Masks are drawn on the GPU, so don't copy
-                masks = t[3][idx]
-            classes, scores, boxes = [x[idx].cpu().numpy() for x in t[:3]]
-
-        return classes, scores, boxes, masks
-
 
 if __name__ == '__main__':
 
@@ -189,6 +188,12 @@ if __name__ == '__main__':
     rospack       = rospkg.RosPack()
     yolact_path   = rospack.get_path('yolact_ros')
     model_path    = os.path.join(yolact_path, 'txonigiri', 'yolact_base_31999_800000.pth')
+    # model_path    = os.path.join(yolact_path, 'txonigiri', 'yolact_base_31599_790000.pth')
+    # model_path    = os.path.join(yolact_path, 'txonigiri', 'yolact_base_29999_750000.pth')
+    # model_path    = os.path.join(yolact_path, 'txonigiri', 'yolact_base_27999_700000.pth')
+    """ you must compile DCN before using Yolact++ """
+    # model_path    = os.path.join(yolact_path, 'txonigiri', 'yolact_plus_base_31666_190000.pth')
+    # model_path    = os.path.join(yolact_path, 'txonigiri', 'yolact_plus_base_33333_200000.pth')
     trained_model = SavePath.from_str(model_path)
     set_cfg(trained_model.model_name + '_config')
 
