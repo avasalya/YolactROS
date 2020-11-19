@@ -27,3 +27,4 @@ simplified ROS wrapper for Yolact, Yolact++, this wrapper doesn't publish bbox o
 ### 2. launch yolact node
 * `rosrun yolact_ros yolact_ros.py`
 * or simply `python3 scripts/yolact_ros.py`
+* also, `roslaunch yolact_ros yolact.launch` ---> add functionality as per your requirement

@@ -42,7 +42,7 @@ class YolactROS:
 
             h, w, _ = frame.shape
             classes, scores, boxes, masks = self.postprocess_results(preds, w, h)
-            print(f'{Fore.RED}Total onigiri found{Style.RESET_ALL}', len(boxes))
+            print(f'{Fore.RED}Total onigiri(s) found{Style.RESET_ALL}', len(boxes))
 
             image = self.prep_display(classes, scores, boxes, masks, frame, fps_str=str(self.fps))
             cv2.imshow('yolact boxes', cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
@@ -74,7 +74,7 @@ class YolactROS:
 
             return classes, scores, boxes, masks
 
-    def prep_display(self, classes, scores, boxes, masks, img, class_color=False, mask_alpha=0.45, fps_str=''):
+    def prep_display(self, classes, scores, boxes, masks, img, class_color=False, mask_alpha=0.8, fps_str=''):
 
         img_gpu = img / 255.0
 
@@ -93,7 +93,7 @@ class YolactROS:
             if on_gpu is not None and color_idx in color_cache[on_gpu]:
                 return color_cache[on_gpu][color_idx]
             else:
-                color = COLORS[color_idx]
+                color = (100, 100, 255) #COLORS[color_idx] #BGR
                 # The image might come in as RGB or BRG, depending
                 color = (color[2], color[1], color[0])
                 if on_gpu is not None:
@@ -188,12 +188,6 @@ if __name__ == '__main__':
     rospack       = rospkg.RosPack()
     yolact_path   = rospack.get_path('yolact_ros')
     model_path    = os.path.join(yolact_path, 'txonigiri', 'yolact_base_31999_800000.pth')
-    # model_path    = os.path.join(yolact_path, 'txonigiri', 'yolact_base_31599_790000.pth')
-    # model_path    = os.path.join(yolact_path, 'txonigiri', 'yolact_base_29999_750000.pth')
-    # model_path    = os.path.join(yolact_path, 'txonigiri', 'yolact_base_27999_700000.pth')
-    """ you must compile DCN before using Yolact++ """
-    # model_path    = os.path.join(yolact_path, 'txonigiri', 'yolact_plus_base_31666_190000.pth')
-    # model_path    = os.path.join(yolact_path, 'txonigiri', 'yolact_plus_base_33333_200000.pth')
     trained_model = SavePath.from_str(model_path)
     set_cfg(trained_model.model_name + '_config')
 
