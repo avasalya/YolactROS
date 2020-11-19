@@ -9,7 +9,6 @@ __pycache__/
 *.jpg
 *.json
 *.txt
-scripts/yoloact/data/coco
 
 # C extensions
 *.so
