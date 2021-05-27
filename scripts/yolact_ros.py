@@ -11,7 +11,7 @@ class YolactROS:
 
         self.fps = 0
         self.top_k = 100
-        self.score_threshold = .7
+        self.score_threshold = .3
 
         self.crop_masks = True
         self.display_masks = True

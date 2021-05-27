@@ -25,7 +25,7 @@ class Detect(object):
         if nms_thresh <= 0:
             raise ValueError('nms_threshold must be non negative.')
         self.conf_thresh = conf_thresh
-        
+
         self.use_cross_class_nms = False
         self.use_fast_nms = False
 
@@ -42,7 +42,7 @@ class Detect(object):
                 Shape: [num_priors, 4]
             proto_data: (tensor) If using mask_type.lincomb, the prototype masks
                 Shape: [batch, mask_h, mask_w, mask_dim]
-        
+
         Returns:
             output of shape (batch_size, top_k, 1 + 1 + 4 + mask_dim)
             These outputs are in the order: class idx, confidence, bbox coords, and mask.
@@ -74,7 +74,7 @@ class Detect(object):
                     result['proto'] = proto_data[batch_idx]
 
                 out.append({'detection': result, 'net': net})
-        
+
         return out
 
 
@@ -90,10 +90,10 @@ class Detect(object):
 
         if inst_data is not None:
             inst = inst_data[batch_idx, keep, :]
-    
+
         if scores.size(1) == 0:
             return None
-        
+
         if self.use_fast_nms:
             if self.use_cross_class_nms:
                 boxes, masks, classes, scores = self.cc_fast_nms(boxes, masks, scores, self.nms_thresh, self.top_k)
@@ -109,7 +109,7 @@ class Detect(object):
 
 
     def cc_fast_nms(self, boxes, masks, scores, iou_threshold:float=0.5, top_k:int=200):
-        # Collapse all the classes into 1 
+        # Collapse all the classes into 1
         scores, classes = scores.max(dim=0)
 
         _, idx = scores.sort(0, descending=True)
@@ -119,7 +119,7 @@ class Detect(object):
 
         # Compute the pairwise IoU between the boxes
         iou = jaccard(boxes_idx, boxes_idx)
-        
+
         # Zero out the lower triangle of the cosine similarity matrix and diagonal
         iou.triu_(diagonal=1)
 
@@ -131,7 +131,7 @@ class Detect(object):
         # Now just filter out the ones greater than the threshold, i.e., only keep boxes that
         # don't have a higher scoring box that would supress it in normal NMS.
         idx_out = idx[iou_max <= iou_threshold]
-        
+
         return boxes[idx_out], masks[idx_out], classes[idx_out], scores[idx_out]
 
     def fast_nms(self, boxes, masks, scores, iou_threshold:float=0.5, top_k:int=200, second_threshold:bool=False):
@@ -139,7 +139,7 @@ class Detect(object):
 
         idx = idx[:, :top_k].contiguous()
         scores = scores[:, :top_k]
-    
+
         num_classes, num_dets = idx.size()
 
         boxes = boxes[idx.view(-1), :].view(num_classes, num_dets, 4)
@@ -167,7 +167,7 @@ class Detect(object):
         boxes = boxes[keep]
         masks = masks[keep]
         scores = scores[keep]
-        
+
         # Only keep the top cfg.max_num_detections highest scores across all classes
         scores, idx = scores.sort(0, descending=True)
         idx = idx[:cfg.max_num_detections]
@@ -204,7 +204,7 @@ class Detect(object):
 
             if cls_scores.size(0) == 0:
                 continue
-            
+
             preds = torch.cat([boxes[conf_mask], cls_scores[:, None]], dim=1).cpu().numpy()
             keep = cnms(preds, iou_threshold)
             keep = torch.Tensor(keep, device=boxes.device).long()
@@ -212,7 +212,7 @@ class Detect(object):
             idx_lst.append(idx[keep])
             cls_lst.append(keep * 0 + _cls)
             scr_lst.append(cls_scores[keep])
-        
+
         idx     = torch.cat(idx_lst, dim=0)
         classes = torch.cat(cls_lst, dim=0)
         scores  = torch.cat(scr_lst, dim=0)
